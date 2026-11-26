@@ -17,4 +17,4 @@ CCR = 500 + 角度/180 × 2000
 通过 USART2(115200) 用 printf 回传，格式：
 Target=角度  CCR=数值  Pulse=脉宽ms
 
-![串口反馈截图](docs/serial.png)
+![串口反馈截图](docs/serial.png.png)
