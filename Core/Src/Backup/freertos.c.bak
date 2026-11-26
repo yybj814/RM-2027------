@@ -1,0 +1,173 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * File Name          : freertos.c
+  * Description        : Code for freertos applications
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2026 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
+#include "FreeRTOS.h"
+#include "task.h"
+#include "main.h"
+#include "cmsis_os.h"
+volatile float   gAngle = 0.0f;
+volatile uint8_t gKeyPlus = 0, gKeyMinus = 0;
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+/* USER CODE BEGIN Variables */
+/* 角度 → CCR：0°=500us，180°=2500us，1计数=1us */
+static uint16_t AngleToCCR(float angle)
+{
+  if (angle < 2.0f)   angle = 2.0f;    /* 两端留余量，别顶限位 */
+  if (angle > 178.0f) angle = 178.0f;
+  return (uint16_t)(500.0f + angle / 180.0f * 2000.0f);
+}
+
+static void Servo_SetAngle(float angle)
+{
+  uint16_t ccr = AngleToCCR(angle);
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, ccr);
+}
+
+/* OLED 三行：Target / CCR / Pulse */
+static void OLED_ShowServo(float angle)
+{
+  uint16_t ccr = AngleToCCR(angle);
+  char line[20];
+
+  OLED_NewFrame();
+  strcpy(line, "Target:");
+  UIntToStr((uint16_t)angle, line + 7);
+  strcat(line, "deg");
+  OLED_PrintASCIIString(0, 0, line, &afont16x8, OLED_COLOR_NORMAL);
+
+  strcpy(line, "CCR:");
+  UIntToStr(ccr, line + 4);
+  OLED_PrintASCIIString(0, 16, line, &afont16x8, OLED_COLOR_NORMAL);
+
+  strcpy(line, "Pulse:");
+  UIntToStr(ccr / 1000, line + 6);
+  strcat(line, ".");
+  UIntToStr(ccr % 1000, line + 8);
+  strcat(line, "ms");
+  OLED_PrintASCIIString(0, 32, line, &afont16x8, OLED_COLOR_NORMAL);
+
+  OLED_ShowFrame();
+
+  printf("Target=%3d  CCR=%4d  Pulse=%d.%03dms\r\n",
+         (int)angle, ccr, ccr / 1000, ccr % 1000);
+}
+
+/* USER CODE END Variables */
+/* Definitions for deSG90 */
+osThreadId_t deSG90Handle;
+const osThreadAttr_t deSG90_attributes = {
+  .name = "deSG90",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+/* Private function prototypes -----------------------------------------------*/
+/* USER CODE BEGIN FunctionPrototypes */
+
+/* USER CODE END FunctionPrototypes */
+
+void StartSG90(void *argument);
+
+void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
+
+/**
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
+void MX_FREERTOS_Init(void) {
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of deSG90 */
+  deSG90Handle = osThreadNew(StartSG90, NULL, &deSG90_attributes);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+  /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
+
+}
+
+/* USER CODE BEGIN Header_StartSG90 */
+/**
+  * @brief  Function implementing the deSG90 thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartSG90 */
+void StartSG90(void *argument)
+{
+  /* USER CODE BEGIN StartSG90 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartSG90 */
+}
+
+/* Private application code --------------------------------------------------*/
+/* USER CODE BEGIN Application */
+
+/* USER CODE END Application */
+
